@@ -39,9 +39,16 @@ go run main.go
 The server will start on port 8080. You can access it by navigating to `http://localhost:8080/courses` in your web browser.
 
 ## Looks like this
-![Website](static/images/golang-website.png)
 
 **this is application**
+![1run continer loaclly](https://github.com/user-attachments/assets/1c8f72f3-7b1f-401e-ac81-421524d3f269)
+
+**Bold Text**
+__Start write Docker file__
+
+
+
+
 
 
 
@@ -49,6 +56,5 @@ The server will start on port 8080. You can access it by navigating to `http://l
 
 
    
-![Website](static/images/golang-website.png)
 
 
