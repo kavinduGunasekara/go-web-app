@@ -1116,3 +1116,59 @@ Now access the application
 
 https://github.com/user-attachments/assets/f0b5b1ed-207f-4130-9f80-7c03eabb4364
 
+**To verify CICD is work fine lets make some changes**
+
+make changes on home,html in github then commit it
+go to home.html then add some text on page what ever you want 
+then commit the changes 
+
+
+lets ci will run 
+![43start ci work after change](https://github.com/user-attachments/assets/b7f42bdf-a1e3-4fc1-a9ab-63a3b0222eaf)
+
+
+then new docker images should be created
+
+https://github.com/user-attachments/assets/fe4d88f3-0e12-4bd9-85e4-00fa5ea70ba8
+
+And new docker image should be tagged  it shloud be pushed to the docker hub
+ones it succesfull we have new tag
+
+![45 after new chabge tag has changed](https://github.com/user-attachments/assets/b78ab55a-aa51-42cb-8291-5fa4dd3f0ab6)
+
+Valus.yaml also updated ,
+Argocd has to pickup this new change, argocd by default looks for new changes  ,
+that's why even if you goes to the k8s cluster execute
+
+```bash
+kubectl get deploy
+kubectl edit deploy go-web-app
+
+```
+you will see images has updated already
+
+![47tag change argocd](https://github.com/user-attachments/assets/0b313a1d-faa2-4f01-950c-a57bf3384669)
+
+to verify we can refresh the applcaiton form browser then you will see we apply update on 
+home.html appear on it , successfully apply new changes 
+--------------------------------------------------------------------------------------------
+ **Let's see how new changes will apply**
+
+
+https://github.com/user-attachments/assets/f381b7d8-62d9-4a0e-b6e5-8a6dfac3533b
+
+
+**Final work what we done in this project**
+
+![finalDevopsified ](https://github.com/user-attachments/assets/c83be1c7-4c0d-4f47-ba00-c700e95bb6fd)
+
+1. Containerization with multistage docker file (implement images with reduce images as well as security)
+2. K8s manifest such as deplyment ,serivce , ingress
+3. Setup Ci using Github Action
+4. Cd using GitOps ( using ArgoCd to implement continous delivery)
+5. k8 cluster set up beacuse ci cd has to deploy applicaion on the target platform then it is K8s(then application deploy on EKS cluster)
+6. set up helm chart Because that use full when dev team need to deploy application on Develop, QA or Production and muliple environment instend of writing manifest for each environment then they can use helm chart pass the values.yaml
+
+7. set ingress controller configuration so that would create loadbalancer depending upon ingress configuration -> so that application expose to the outside world
+
+8. how to map load balancer ip address to loacl DNS so that we test if the application is access from the outside world
