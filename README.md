@@ -246,9 +246,11 @@ In this we use nginx ingress controoler
 
 
 2.4 now validate k8s manifest that we have written 
-  2.4.1 we need have a k8s cluster
-  2.4.2 we use EKS from AWS (it is enterpirse k8s cluster)f
-  2.4.3 How to run Eks cluster 
+
+
+2.4.1 we need have a k8s cluster
+2.4.2 we use EKS from AWS (it is enterpirse k8s cluster)f
+2.4.3 How to run Eks cluster 
 
 check thos things 
 step o1
