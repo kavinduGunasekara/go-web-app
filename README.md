@@ -338,8 +338,325 @@ onecs the address is assigned we can take the IP address and we can map it with 
 that we have created in my etc host
 before it verify at least service is working fine
 then what we can do we cam expose the service in the nodeport mode
-then before move forward verify service is working fine
+then before move forward with the ingress controller configuration, verify service is working fine.
+go to the EC2 first - beacuse if we are running the service in the node portmode  
+so first edit the service 
+```bash
+kubectl edit svc go-web-app
 
-   
+```
+then in end of opend file you will see there is type as clusterip then change it to nodeport
+
+now going to verify service is woring fine or not , even without ingress configuration
+then expose the service on node port mode then run this command to check
+
+```bash
+kubectl get svc
+```
+then it show go-web-app running on node port and can access on port 32271 on my node ip  address
+
+![11node port change successfully](https://github.com/user-attachments/assets/f2c7487e-ec5d-4756-9068-60a6df2805bd)
+
+ check your all  node ip address 
+
+ ```bash
+kubectl get nodes -o wide
+
+```
+
+then it show two nodes and those are external Ip address so then pick up one of them and using 
+browser usign that ip and using node port then access to website
+
+54.160.199.111:32271/courses
+
+**Application running fine even on a k8s cluster**
+
+![12connect to eks cluster](https://github.com/user-attachments/assets/62010144-e109-409a-ba01-912cf463479b)
 
 
+then in this we have used service of type nodeport mode then what we have to do is
+
+we done doeckr file
+k8s(service ,deployment , ingress) manifest creation.
+completed EKS cluster creation.
+implement ingress controller as  well
+now we will compleate ingress controller configuration
+
+so the ingress controller configurattion
+
+how to create ingresss controller creation  then go to doc -> search nginx ingress controller 
+there are two 
+1. proived by nginx
+2. community driven nginx
+
+go to this community driven nginx
+go to aws section
+
+then copy networkload balancer
+
+ 
+Install Nginx Ingress Controller on AWS
+Step 1: Deploy the below manifest
+
+```bash
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/controller-v1.11.1/deploy/static/provider/aws/deploy.yaml
+
+```
+run aboove command it will create ingress controller resources
+
+three things remember about ingress
+1.ingress itself
+2.ingress controll 
+3.load balancer
+
+ingress controller will watch ingress resourc and create load balancer
+
+in k8s cluster you can not create load balancer by your self because it is not practically 
+easily to configure load balancer every time
+then you can write ingress file
+ingress controller which is implement usually a go program written by the load balancer company 
+in this we use nginx , which is written by community.
+ingress controller tht is basicaly a go program that is written by load balancer caompany what 
+it does it will watch for the ingress resource  and create load balancer as per ingress 
+configuration.
+
+
+now see nginx ingress controller running 
+
+![13 create iginx ingress contorller](https://github.com/user-attachments/assets/e61a4979-87cd-4434-838e-8bd42e0b0fd6)
+
+
+```bash
+
+kubectl get pod -n ingress-nginx
+
+```
+
+then you will find k8s pod  
+
+
+ kubectl edit pod <-name of runnign nginx continer->  -n ingress-nginx
+
+ in this oped file go down and check section ingress calss = nginx
+ because in our ingress file we mention it , then this is how ingress cls name is used
+ 
+ like this --
+
+   ![14check ingreess controller](https://github.com/user-attachments/assets/78322f9a-251f-4a80-984e-9affbc30b320)
+
+we have the ingress controller running lets see if this ingress controller was abale to to watch 
+our ingress resource run that code to check
+
+```bash
+kubectl get ing
+```
+
+so the ingress resource is watch by the ingresss controller and it gave us a ip addresss actually
+a domain name
+
+like this --->
+
+![15ensure load balancer](https://github.com/user-attachments/assets/8ab2ce9a-a3da-4d86-a68c-9a0f9a6ab682)
+
+explain agaim
+ingress controller watch for the ingress resouce and create a load balancer
+so this nginx ingress controller watched for the ingress resource and created a load balancer
+on AWS which is go to AWS check if it has create load balancer
+
+check on AWS
+
+![16 load balancer created by ingress controller](https://github.com/user-attachments/assets/00c4f855-d625-4c69-a898-85c8ac827fe2)
+
+it creates load balancer succesfully that create by the ingress controller 
+lets try usinf above photo show the DNS name using that check if i can accss
+
+first time you have not access show 404 error
+
+![16 1](https://github.com/user-attachments/assets/f3b0c64f-ed1d-484b-8dd3-c8d2e2d0198f)
+
+then why can not access
+ go to ingress file you have clearly explain the load balancer only request if someonr is 
+ accessing the host name go web app.local
+
+ in this check
+ ![17 1](https://github.com/user-attachments/assets/ff28c69a-2e6f-41b6-bc7f-04c2149e63f0)
+
+what we do in organiztion
+, we provide something like amozon.com whare DNS is already mapped but in our case it not 
+possible.
+
+then what we will do we will get this host name
+
+
+then first get loadbalancer address 
+that one see in picture
+
+![15ensure load balancer](https://github.com/user-attachments/assets/2e02e608-dddc-4560-91ee-def8b06d9cf0)
+
+copy address and go to cmd
+ type
+```bash
+nslookup above coppied address paste here
+
+```
+then you see the ip address then copy it 
+
+In mac or linux machine
+
+now go to 
+```bash
+sudo vim etc/hosts
+```
+In windows 
+
+no go to hosts file using
+
+```bash
+
+cd C:\Windows\System32\drivers\etc
+vim hosts
+```
+
+then now will open hosts file 
+on it we are doing DNS mapping
+
+follow like this
+
+![18 1 1](https://github.com/user-attachments/assets/851b32f5-fee5-4b44-aac5-ea902cc3b3ea)
+
+
+https://github.com/user-attachments/assets/e1d21ab8-efbd-49a1-8fef-8e3c05861d8d
+
+
+Now go to browser and type **go-web-app.local/home**
+
+**Now can acceess the application**
+ ![18success access by gowebapp on url](https://github.com/user-attachments/assets/6fd9b95b-96a4-4673-acbd-29d01468105d)
+
+
+
+**remember**
+ in this we use go-web-app.local but in organiztion we will use like daraz.lk , google.com like that
+
+
+ **Step 03**
+
+ **Helm creation before Ci implement**
+
+
+Helm is that when you want to deploy your application to different environments then , now
+I have deplyment, service ingress files .. then alll the things on it hard coded
+
+then when comes to developer environment as Dev for the staging environment I have QA 
+for the production environemnt I have Production Team
+then I will create folder like k8s dev, k8s Qa, for all above I  metioned ,
+insted you can use helm also use customize and what you can do just , you can asked your develpoers right in the helm chart you can variablize these kind of things .
+you can just say your development team or testing team whoever using it you can just tell them that you know pass the tag name as variable.
+
+1.Create folder called HELM
+
+![20create help folder](https://github.com/user-attachments/assets/bf444828-57fc-4b2a-adcc-38e31a81b27f)
+
+2. Insall  helm locally
+![21chek helm version](https://github.com/user-attachments/assets/659131f4-0952-4f34-a197-f820cd5ebfb1)
+ 
+
+3.create helm chart in helm directory 
+
+```bash
+cd helm
+helm create go-web-app-chart 
+```
+
+![23cratea helm chart in right directory](https://github.com/user-attachments/assets/fece1ccd-fe1e-4e40-a786-34d7ff0b797d)
+
+4. go to go-web-app-chart
+
+5. remove chart folder in that directory
+
+![23 1](https://github.com/user-attachments/assets/63158cd5-c9bf-464f-8547-e30b895718dc)
+
+now only there this files
+chart.yaml templates values.yaml
+
+6. remove every thing in the templates folder
+```bash
+rm -rf '
+```
+
+7. inside templates folder copy k8s folder and paste in templates folder
+8. go to vim deployment.yaml folder and in that replace tag like this
+
+![26 1](https://github.com/user-attachments/assets/b00cecd4-a634-4f33-b294-e5c6bab469da)
+
+
+this mean helm  whenever executed will looks tag from the values.yaml file how  
+
+go to code -> go helm-> go values.yaml and replace it with this code
+
+```bash
+# Default values for go-web-app-chart.
+# This is a YAML-formatted file.
+# Declare variables to be passed into your templates.
+
+replicaCount: 1
+
+image:
+  repository: kavindugunasekara2000/go-web-app
+  pullPolicy: IfNotPresent
+  # Overrides the image tag whose default is the chart appVersion.
+  tag: "13573617143"
+
+ingress:
+  enabled: false
+  className: ""
+  annotations: {}
+    # kubernetes.io/ingress.class: nginx
+    # kubernetes.io/tls-acme: "true"
+  hosts:
+    - host: chart-example.local
+      paths:
+        - path: /
+          pathType: ImplementationSpecific
+```
+
+from this deployment yaml file get images and go to tag 
+
+then when we implemtn cicd will update the helm values .yaml  dynamically  so every time cicd is 
+run  what we are going to do we are update the values.yaml of helm with the latest image that we
+created in the ci and using ARGOCD that latest image with the latest tag will be automaticaaly deployed. 
+
+
+9. Verify helm worikng fine
+
+first delete deployment , service , ingress file
+
+![28 1](https://github.com/user-attachments/assets/4533a628-b8d3-4b3b-af66-0a1c596d253e)
+
+now check using
+```bash
+kubectl get all
+```
+nothing inside you can see means nothing related to our go web app
+
+10. now using HELM installl what we delete before
+
+```bash
+helm install go-web-app ./go-web-app-char
+```
+ ![26install every thing using helm](https://github.com/user-attachments/assets/039e9021-a20e-4394-b4d9-a01b8c39f325)
+
+
+**what we done we have install samething using HELM**
+
+
+11. run
+```bash
+kubectl edit deploy go-web-app
+
+```
+
+
+
+12. 
+ 
