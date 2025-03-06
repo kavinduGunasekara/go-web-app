@@ -1,21 +1,26 @@
-# Go Web Application
+# Go Web Application 🚀
 
-Hello 
+Hello  
+![Screenshot 2025-02-27 122649](https://github.com/user-attachments/assets/600eb845-be78-485b-b0e3-58b9e515c4ee)
 
 **Complete DevOps Implementation in one project**
 
 We will implement End to End DevOps on a Golang web application. We will implement the following things -->
 
-1. Containerization with multistage docker file (implement images with reduce images as well as security)
-2. K8s manifest such as deplyment ,serivce , ingress
-3. Setup Ci using Github Action
-4. Cd using GitOps ( using ArgoCd to implement continous delivery)
-5. k8 cluster set up beacuse ci cd has to deploy applicaion on the target platform then it is K8s(then application deploy on EKS cluster)
-6. set up helm chart Because that use full when dev team need to deploy application on Develop, QA or Production and muliple environment instend of writing manifest for each environment then they can use helm chart pass the values.yaml
 
-7. set ingress controller configuration so that would create loadbalancer depending upon ingress configuration -> so that application expose to the outside world
+![1 1cover photo](https://github.com/user-attachments/assets/ab9ba952-0405-4b52-9e5e-916468e520f0)
 
-8. how to map load balancer ip address to loacl DNS so that we test if the application is access from the outside world
+ 
+1. 🐳 Containerization with multistage docker file (implement images with reduce images as well as security)
+2. ☸️K8s manifest such as deplyment ,serivce , ingress
+3. ⚙️ Setup Ci using Github Action
+4. 🚀 Cd using GitOps ( using ArgoCd to implement continous delivery)
+5. ☁️ k8 cluster set up beacuse ci cd has to deploy applicaion on the target platform then it is K8s(then application deploy on EKS cluster)
+6. 📦  set up helm chart Because that use full when dev team need to deploy application on Develop, QA or Production and muliple environment instend of writing manifest for each environment then they can use helm chart pass the values.yaml
+
+7. 🌍 set ingress controller configuration so that would create loadbalancer depending upon ingress configuration -> so that application expose to the outside world
+
+8. 🔗 how to map load balancer ip address to loacl DNS so that we test if the application is access from the outside world
 
 
 **Strt the Project**
