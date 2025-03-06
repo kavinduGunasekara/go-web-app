@@ -2,7 +2,9 @@
 
 Hello 
 
-Devops Implementation
+**Complete DevOps Implementation in one project**
+
+We will implement End to End DevOps on a Golang web application. We will implement the following things -->
 
 1. Containerization with multistage docker file (implement images with reduce images as well as security)
 2. K8s manifest such as deplyment ,serivce , ingress
