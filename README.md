@@ -650,13 +650,34 @@ helm install go-web-app ./go-web-app-char
 **what we done we have install samething using HELM**
 
 
-11. run
+11. run to verify
 ```bash
 kubectl edit deploy go-web-app
 
 ```
+then you will see the images section image namehas :v1
+
+now check inside the templates  -> go to deployemnt.yaml has this one 
+image: kavindugunasekara2000/go-web-app:{{ .Values.image.tag }}
+
+when you run helm install command what HELM is done  it went to the deployemnt it saw that there is a substitution so it went to the values.yaml and it replaec the tag on the deployment.yaml
+thats why in kubectl deployment we have version tag as v1
+
+
+12. **HELM pert is done**
+then uninstall helm every thing
+```bash
+helm uninstall go-web-app
+
+```
+![27remove helm after done the helm part alsp](https://github.com/user-attachments/assets/c719b716-9449-4b67-96b7-dcf73f7df3be)
+
+
+13. **HELM pert is done**
+
+
+**Step 04 Implemet Ci using Github Action**
 
 
 
-12. 
  
