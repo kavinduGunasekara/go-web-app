@@ -678,6 +678,441 @@ helm uninstall go-web-app
 
 **Step 04 Implemet Ci using Github Action**
 
+**CI**
+
+In ci we implement multiple stages
+Steps
+1.Build & Test(unit)
+2.Static code analysis
+3.create & push Docker image
+4.Update HELM with docker image that we have created
+
+  after this CD comes to the picture use ARGOCD
+What we will do in CD Ones HELM tag is updated ARGOCD will pull the HELM chart and deployed it on to the K8s cluster ,
+
+we implement CI and CD we use GIthub Action for Ci
+and for cd we use Argocd
+ci cd - where whenever developer commit a change or create a pull request (in this we developer 
+commit ) whenever developer commit a change the cicd pipeline will be trigggered where as part 
+of the ci  using github action we will run mutiple stages 
+ **stages**
+  1.Build and unit test
+  2.static code analysis (to verify if code has any static code )
+  3.Docker image create & push
+  4.Update Helm also update K8s manifest 
+  what we actually update is when the the docker images is connected here for this perticular 
+  commit that developer has made know the docker image that we create will be mapped with the 
+  developer commit , so the docker image will have a new tag and that will be updated in the 
+  helm values.yaml 
+
+* Every time developer makes a commit HELM is automaticaly updted the values.yaml with a new
+  commit.
+  and
+  **Now Cd comes** to connect with it , where we will use ArgoCd will watch the helm chart
+  whenever the values.yaml is updated it will pull the helm chart and install it on the k8s
+  cluster , if the helm chart is already there it will update the helm chart so anew version is
+  deployed.
+  If you understand this workflow implementing ci cd is not difficult.
+
+** what is important is you need to how CI and CD are connected you can add n number of stages 
+inside your Ci that really does not mattter  because adding more stages is not difficult .
+
+what difficult is how ci every new commit is  updated to your HELM and how CD immediately picks
+up that change and deploys that on to the k8s cluster .
+
+** NOW START IMPLEMENT ** 
+Let's have a FUN
 
 
+**STEPs --->**
+step 01
+1.create a folder as GitHub inside this create another folder workflows
+2. inside workflow  create ci.yaml 
+-->
+![29 1](https://github.com/user-attachments/assets/79aeac7f-b1c6-46b2-8789-f89850b5f3f1)
+<--
+write code in ci.yaml
+
+__________________________________________________________________________________________________
+```bash
+
+name: CI
+
+# Exclude the workflow to run on changes to the helm chart
+on:
+    push:
+      branches:
+        - main
+      paths-ignore:
+        - 'helm/**'
+        - 'k8s/**'
+        - 'README.md'
+  
+jobs:
+  
+    build:
+      runs-on: ubuntu-latest
+  
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+  
+      - name: Set up Go 1.22
+        uses: actions/setup-go@v2
+        with:
+          go-version: 1.22
+  
+      - name: Build
+        run: go build -o go-web-app
+  
+      - name: Test
+        run: go test ./...
+    
+    code-quality:
+      runs-on: ubuntu-latest
+  
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+  
+      - name: Run golangci-lint
+        uses: golangci/golangci-lint-action@v6
+        with:
+          version: v1.56.2
+    
+    push:
+      runs-on: ubuntu-latest
+  
+      needs: build
+  
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+  
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v1
+  
+      - name: Login to DockerHub
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+  
+      - name: Build and Push action
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: ./Dockerfile
+          push: true
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:${{github.run_id}}
+  
+    update-newtag-in-helm-chart:
+      runs-on: ubuntu-latest
+  
+      needs: push
+  
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN }}
+  
+      - name: Update tag in Helm chart
+        run: |
+          sed -i 's/tag: .*/tag: "${{github.run_id}}"/' helm/go-web-app-chart/values.yaml
+  
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "kavindugunasekara2000@gmail.com"
+          git config --global user.name "WAKD Gunasekara"
+          git add helm/go-web-app-chart/values.yaml
+          git commit -m "Update tag in Helm chart"
+          git push
+```
+__________________________________________________________________________________________________
+
+3.Go to github repo
+ in the repo go to settings
+ go to secrets ans variable
+ create New repository secret
+       for 1.DOCKERHUB_USERNAME
+           2.DOCKERHUB_PASSWORD
+           3.DOCKERHUB_TOKEN
+
+     ![30 1](https://github.com/user-attachments/assets/394d40e6-b727-446f-ad3e-d3709535d198)
+
+FOR DOCKERHUB_TOKEN go to Docker hub 
+ login to dockerhub
+ go to account settong
+ click personal access token
+ generate new token
  
+![31 1 1](https://github.com/user-attachments/assets/11cbf645-d441-460b-9559-95b3253c47e5)
+_______________________________________________________________________________________________
+
+![31 1](https://github.com/user-attachments/assets/4cf0ec65-0956-49b0-8e78-836a5f4be6d2)
+
+final output of secret key 
+
+![31 1 1 1](https://github.com/user-attachments/assets/ad6dfa4d-6eac-4b6b-bea1-307bc85e5ffe)
+
+
+ This is importand  " tags: ${{ secrets.DOCKERHUB_USERNAME }}/go-web-app:${{github.run_id}}"
+ so every commit the developer creates a new docker image is created and the tag for the new 
+ docker image basically GitHub.runid , so every commit is unique and similarly that tag is create 
+ for every commit if developer is creating 100 commits , then 100 commits will create 100 docker
+ images , and they are pushed to the docker registry with GitHub.runid 
+
+ we will do commit and check that docker image is created with new run id.
+
+ Last stage 
+
+ **Update the Helm**
+ onece the new image is created with the new tag then we need to update the **HELM chart**
+ 
+ to this we add that code to Ci.yaml
+ ```bash
+update-newtag-in-helm-chart:
+      runs-on: ubuntu-latest
+  
+      needs: push
+  
+      steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.TOKEN }}
+  
+      - name: Update tag in Helm chart
+        run: |
+          sed -i 's/tag: .*/tag: "${{github.run_id}}"/' helm/go-web-app-chart/values.yaml
+  
+      - name: Commit and push changes
+        run: |
+          git config --global user.email "kavindugunasekara2000@gmail.com"
+          git config --global user.name "WAKD Gunasekara"
+          git add helm/go-web-app-chart/values.yaml
+          git commit -m "Update tag in Helm chart"
+          git push
+```
+completed the ci 
+
+to commit that to github repository we need Github token
+now start github 
+  in the repo go to settings
+  go to secrets ans variable
+  create New repository secret 
+  create new token as TOKEN 
+
+  ![31 1 1 1](https://github.com/user-attachments/assets/1005a7e3-4ee9-46f1-ac0a-ac6522876e9f)
+
+for this you need github action personal TOKEN 
+ HOW TO GET IT ---
+
+ go to main setttings
+ go down of page
+ click Developer settings
+ personal access token
+  tokens(classic) 
+    crete the token  generate new token(classic)
+  
+  
+ ![34 1](https://github.com/user-attachments/assets/2611c59e-8e47-44f8-b05a-934054ec91c6)
+
+type golang-demo-cicd
+
+![33 1](https://github.com/user-attachments/assets/6a7562a2-caf1-473d-8bbf-67a2479c4b89)
+
+give permissions 
+
+![33 1 1 1](https://github.com/user-attachments/assets/980e7631-4fa6-4950-b8b7-ecc2399913b2)
+
+generate token
+
+copy and past it on secret access token section password
+
+ **END THE CI PART**
+-----------------------------------------------------------------------------------------------
+
+**CHECK CI IS WORKING FINE OR NOT**
+
+START ADD THIS FILES TO GITHUB
+
+```bash
+ git add .
+ git commit -am " implementrd ci"
+ git push
+
+ ```
+go to repo 
+
+
+
+Now pipeline is running
+
+ ![33 2 2](https://github.com/user-attachments/assets/15580af3-6a42-4ae9-aaa0-e34236715a09)
+
+ Go to actions section
+  
+![28create ci pipeline](https://github.com/user-attachments/assets/218dc98b-8ce8-4640-8368-1ad0f9d39f95)
+
+after RUN the Ci successfull ---->
+
+Now docker images getting created
+
+go to docker hub
+
+go to go-web-app
+
+go to the TAGS
+let's see new tag has new tag has push to docker hub
+
+![new tag with runner id](https://github.com/user-attachments/assets/cc883ddd-4d72-43f3-97d5-89680d9f587d)
+
+Now go to repo helm folder 
+go to the values.yaml
+
+
+**__________________you will see new tag has updated ___________________**
+
+![30successfull update docker tag in helm](https://github.com/user-attachments/assets/f9181b2a-5346-494c-a801-1eaa2e92871b)
+
+****Now CI has created sucessfully** **
+
+Now only have Argocd part for Cd
+
+now it is noly left with the Argocd every time the ci pipline is run Argocd has to identify the 
+change and push it to the k8s cluster.
+
+
+**Lets start implement ArgoCd part**
+
+Install Argo CD
+ Install Argo CD using manifests
+ ```bash 
+ kubectl create namespace argocd
+ kubectl apply -n argocd -f https://raw.githubusercontent.com/argoproj/argo- 
+ cd/stable/manifests/install.yaml
+```
+In your k8s cluster  argocd will be install 
+
+lets argocd will install compled
+![31install ARGOCD](https://github.com/user-attachments/assets/946a9840-edc4-43b2-92f2-1b6e9cbfb5d3)
+
+ Access the Argo CD UI (Loadbalancer service)
+  ```bash 
+kubectl patch svc argocd-server -n argocd -p '{"spec": {"type": "LoadBalancer"}}'
+```
+Access the Argo CD UI (Loadbalancer service) -For Windows
+
+  ```bash 
+kubectl patch svc argocd-server -n argocd -p '{\"spec\": {\"type\": \"LoadBalancer\"}}'
+```
+![32ssAccess the Argo CD UI (Loadbalancer service)](https://github.com/user-attachments/assets/0a50f2f6-e598-408a-a044-cf0d9128d862)
+
+
+--------------------------------------------------
+
+check argocd exteranl ip
+  ```bash 
+kubectl get svc -n argocd
+
+```
+
+acees to argocd
+
+```bash
+kubectl get nodes -o wide
+```
+
+![34try to access ARGOCD](https://github.com/user-attachments/assets/ebda643a-ee78-4fa8-a4b6-15f73d60183c)
+
+get tha ip and node port to accees using it access the argocd
+
+54.160.199.111:32434
+
+![35 1](https://github.com/user-attachments/assets/240730e6-9c77-4c07-aa49-87f9a85276d4)
+
+you need sign in
+username admin
+
+
+to get password run this commands
+```bash
+kubectl get secrets -n argocd
+kubectl edit secret argocd-install-admin-secret -n argocd
+
+```
+
+![36 1](https://github.com/user-attachments/assets/515b62b4-d993-4080-a4cc-d706a11a1e98)
+
+password decode 
+
+
+![36 1 1](https://github.com/user-attachments/assets/d8ff6c03-904c-4b9d-9cca-eef0207ef6fa)
+
+--------------------------------------------------------------------------------------
+
+In windows use this to get argocd password
+
+```bash
+kubectl -n argocd get secret argocd-initial-admin-secret -o jsonpath="{.data.password}" | 
+    ForEach-Object { [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($_)) };
+```
+![38 argocd password get](https://github.com/user-attachments/assets/cb91cf51-31b3-49f6-9b80-a2630630c06b)
+
+
+using password sign in to argocd
+
+successfully sign in to
+
+
+argocd is on same k8s cluster 
+
+in argocd dash board 
+![37 1](https://github.com/user-attachments/assets/aa951000-5d24-4c90-b258-1175f310af0c)
+
+cleick new app
+
+give name as go-web-app
+
+sync policy Automatic
+
+click self heal
+
+repository url 
+put right link here
+
+then it auto matically identofy the folder
+
+![38 1](https://github.com/user-attachments/assets/93f44975-1198-49af-b866-f30eee1ff98a)
+
+select  values.yaml
+
+![38 1 1](https://github.com/user-attachments/assets/8289be8c-6382-4faa-bded-5f1cf03850e3)
+
+
+cleck **create**
+
+
+argocd will look all the files in your github repository with in the helm chart it will update
+the values.yaml with all the changes that are required in your deployment and all
+
+**now you will see argocd has started deploying evrythig you see everything is created pod ,svc ,
+ingreess in created**
+
+![39Argocd work successfully](https://github.com/user-attachments/assets/58e4e0be-be39-49eb-be46-2be03b6c29fe)
+
+
+check every thing created successfully
+
+![40 successfull](https://github.com/user-attachments/assets/0757e2e8-3d24-4e5e-8643-b8a0b2c1c4e0)
+
+Now access the application
+
+![41success](https://github.com/user-attachments/assets/188c207d-01d5-4790-9f34-ea9709873b5a)
+
+**Using CICD now application has deployed ---- Access application**
+
+https://github.com/user-attachments/assets/f0b5b1ed-207f-4130-9f80-7c03eabb4364
+
