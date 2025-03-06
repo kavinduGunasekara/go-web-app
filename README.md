@@ -8,6 +8,9 @@
 
 We will implement End to End DevOps on a Golang web application. We will implement the following things -->
 
+# Solution Architecture Diagram
+![diagram-export-3-7-2025-12_48_23-AM](https://github.com/user-attachments/assets/cb13dcff-6ae7-434f-b818-ed568ea4256e)
+
 
 ![1 1cover photo](https://github.com/user-attachments/assets/ab9ba952-0405-4b52-9e5e-916468e520f0)
 
